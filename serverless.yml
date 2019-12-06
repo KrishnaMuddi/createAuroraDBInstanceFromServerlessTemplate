@@ -1,0 +1,79 @@
+service: aurora-serverless-1
+plugins:
+  - serverless-pseudo-parameters
+
+provider:
+  name: aws
+  region: us-east-1
+  stage: test
+  memorySize: 256
+  runtime: nodejs10.x
+  role: LambdaRole
+  profile: personal
+  environment:
+    DB_NAME: ${self:custom.DB_NAME}
+    SECRET_ARN:
+      Ref: SecretManager
+    CLUSTER_ARN: "arn:aws:rds:#{AWS::Region}:#{AWS::AccountId}:cluster:#{AuroraRDSCluster}"
+    # arn:aws:rds:us-east-1:684655758166:cluster:aurora-serverless-test-test-aurorardscluster-14c65i9hmr9s3
+    PWD:
+      !Join [
+        "",
+        [
+          "{{resolve:secretsmanager:",
+          !Ref SecretManager,
+          ":SecretString:password}}",
+        ],
+      ]
+  # Not relevant as of May 31, 2019
+  iamRoleStatements:
+    - Effect: "Allow"
+      Action:
+        - "rds-data:ExecuteSql"
+      Resource: "*"
+    - Effect: "Allow"
+      Action:
+        - "secretsmanager:GetSecretValue"
+      Resource: "*"
+# arn:aws:rds:us-east-2:123456789012:cluster:my-aurora-cluster-1
+custom:
+  DB_NAME: testAurora
+  AURORA:
+    VPC_CIDR: 10
+
+resources:
+  Resources:
+    LambdaRole: ${file(./resource/LambdaRole.yml)}
+    ServerlessInternetGateway: ${file(./resource/ServerlessInternetGateway.yml)}
+    ServerlessVPC: ${file(./resource/ServerlessVPC.yml)}
+    ServerlessVPCGA: ${file(./resource/ServerlessVPCGA.yml)}
+    ServerlessSubnetA: ${file(./resource/ServerlessSubnetA.yml)}
+    ServerlessSubnetB: ${file(./resource/ServerlessSubnetB.yml)}
+    ServerlessSubnetC: ${file(./resource/ServerlessSubnetC.yml)}
+    ServerlessSubnetGroup: ${file(./resource/ServerlessSubnetGroup.yml)}
+    ServerlessSecurityGroup: ${file(./resource/ServerlessSecurityGroup.yml)}
+    RouteTablePublic: ${file(./resource/RouteTablePublic.yml)}
+    RoutePublic: ${file(./resource/RoutePublic.yml)}
+    RouteTableAssociationSubnetA: ${file(./resource/RouteTableAssociationSubnetA.yml)}
+    RouteTableAssociationSubnetB: ${file(./resource/RouteTableAssociationSubnetB.yml)}
+    RouteTableAssociationSubnetC: ${file(./resource/RouteTableAssociationSubnetC.yml)}
+
+    AuroraRDSClusterParameter: ${file(./resource/AuroraRDSClusterParameter.yml)}
+    AuroraRDSCluster: ${file(./resource/AuroraRDSCluster.yml)}
+    SecretManager: ${file(./resource/SecretManager.yml)}
+    SecretRDSInstanceAttachment:
+      Type: "AWS::SecretsManager::SecretTargetAttachment"
+      Properties:
+        SecretId: !Ref SecretManager
+        TargetId: !Ref AuroraRDSCluster
+        TargetType: AWS::RDS::DBCluster
+
+functions:
+  hello:
+    memorySize: 128
+    handler: handler.hello
+    events:
+      - http:
+          path: /
+          method: get
+          cors: true

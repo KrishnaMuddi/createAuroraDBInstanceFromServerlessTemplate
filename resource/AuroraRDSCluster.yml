@@ -1,0 +1,34 @@
+Type: AWS::RDS::DBCluster
+Properties:
+  MasterUsername:
+    !Join [
+      "",
+      [
+        "{{resolve:secretsmanager:",
+        !Ref SecretManager,
+        ":SecretString:username}}",
+      ],
+    ]
+  MasterUserPassword:
+    !Join [
+      "",
+      [
+        "{{resolve:secretsmanager:",
+        !Ref SecretManager,
+        ":SecretString:password}}",
+      ],
+    ]
+  DBSubnetGroupName:
+    Ref: ServerlessSubnetGroup
+  Engine: aurora
+  EngineMode: serverless
+  EngineVersion: "5.6"
+  EnableHttpEndpoint: true
+  DatabaseName: ${self:custom.DB_NAME}
+  BackupRetentionPeriod: 1
+  ScalingConfiguration:
+    AutoPause: false
+  DBClusterParameterGroupName:
+    Ref: AuroraRDSClusterParameter
+  VpcSecurityGroupIds:
+    - !Ref "ServerlessSecurityGroup"

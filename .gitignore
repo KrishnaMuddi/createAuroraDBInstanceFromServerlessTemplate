@@ -1,0 +1,10 @@
+# package directories
+node_modules
+
+.pacckage-lock.json
+
+# Serverless directories
+.serverless
+
+# IDE directory
+.idea
