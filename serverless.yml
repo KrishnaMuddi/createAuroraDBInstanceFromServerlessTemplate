@@ -15,7 +15,6 @@ provider:
     SECRET_ARN:
       Ref: SecretManager
     CLUSTER_ARN: "arn:aws:rds:#{AWS::Region}:#{AWS::AccountId}:cluster:#{AuroraRDSCluster}"
-    # arn:aws:rds:us-east-1:684655758166:cluster:aurora-serverless-test-test-aurorardscluster-14c65i9hmr9s3
     PWD:
       !Join [
         "",
@@ -35,7 +34,6 @@ provider:
       Action:
         - "secretsmanager:GetSecretValue"
       Resource: "*"
-# arn:aws:rds:us-east-2:123456789012:cluster:my-aurora-cluster-1
 custom:
   DB_NAME: testAurora
   AURORA:
